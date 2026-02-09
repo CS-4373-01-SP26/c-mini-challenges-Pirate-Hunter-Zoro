@@ -106,10 +106,15 @@ void exercise_3() {
     }
 }
 
+void exercise_4() {
+    // TODO - implement this function
+}
+
 int main(int argc, char** argv) {
     exercise_1();
     exercise_2();
     exercise_3();
+    exercise_4();
     
     return 0;
 }
