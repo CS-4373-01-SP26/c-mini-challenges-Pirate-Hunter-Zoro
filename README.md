@@ -64,3 +64,9 @@ b. What did you observe about differences in program behavior in row-major vs. c
 a. What were some alternative implementation strategies could you entertain here?
 
 b. What programming hazards/pitfalls should be considered in your general approach?
+
+## Note to self on how I should compile
+
+```bash
+gcc exercises.c -o bin/program_name
+```
