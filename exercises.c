@@ -91,7 +91,12 @@ void exercise_3() {
         clock_t end = clock();
         double elapsed_time = ((double)(end - start)) / CLOCKS_PER_SEC;
 
-        // TODO - print
+        // Print resulting vector
+        printf("Resulting Product:\n");
+        for (int i=0; i<rows; i++) {
+            printf("%f ", result[i]);
+        }
+        printf("\nTime Elapsed: %f seconds\n\n", elapsed_time);
  
         // Prevent memory leak :-)
         free(vector);
