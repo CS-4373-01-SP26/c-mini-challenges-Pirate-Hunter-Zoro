@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/mikeyferguson/Developer/HPC/c-mini-challenges-Pirate-Hunter-Zoro",
+      "program": "/Users/mikeyferguson/Developer/HPC/c-mini-challenges-Pirate-Hunter-Zoro/build/Debug/outDebug"
+    }
+  ]
+}
