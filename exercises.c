@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <stdlib.h>
 
 void exercise_1() {
     // Read and print name
@@ -40,7 +41,53 @@ void exercise_2() {
 }
 
 void exercise_3() {
-    // TODO
+    FILE* fp = fopen("mv.txt", "r");
+    if (fp == NULL) {
+        printf("ERROR reading file mv.txt...\n");
+    } else {
+        int rows;
+        int cols;
+        // First line in file contains rows and columns
+        fscanf(fp, "%d %d", &rows, &cols);
+        // Now we can allocate the matrix
+        double* matrix = malloc(rows * cols * sizeof(double));
+        // Vector length must be the number of columns
+        double* vector = malloc(cols * sizeof(double));
+        // Resulting product will be of length rows
+        double* result = malloc(rows * sizeof(double));
+
+        // Read in the actual matrix
+        for (int i=0; i<rows; i++) {
+            for (int j=0; j<cols; j++) {
+                // Ignore white space
+                fscanf(fp, "%lf", &matrix[i * cols + j]);
+            }
+        }
+
+        // Read in the vector length and ensure it is cols
+        int vector_length;
+        fscanf(fp, "%d", &vector_length);
+        if (vector_length != cols) {
+            printf("ERROR - invalid dimensions given with matrix of %d columns and vector of length %d", cols, vector_length);
+            // Prevent memory leak :-)
+            free(matrix);
+            free(vector);
+            free(result);
+            return;
+        }
+
+        // Read in the vector
+        for (int i=0; i<vector_length; i++) {
+            fscanf(fp, "%lf", &vector[i]);
+        }
+
+        // Perform multiplication
+
+        // Prevent memory leak :-)
+        free(vector);
+        free(matrix);
+        free(result);
+    }
 }
 
 int main(int argc, char** argv) {
