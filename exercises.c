@@ -80,8 +80,19 @@ void exercise_3() {
         }
 
         // Perform multiplication
-        // TODO
+        clock_t start = clock();
+        for (int r=0; r<rows; r++) {
+            int dot_prod = 0;
+            for (int c=0; c<cols; c++) {
+                dot_prod += matrix[r*cols + c] * vector[c];
+            }
+            result[r] = dot_prod;
+        }
+        clock_t end = clock();
+        double elapsed_time = ((double)(end - start)) / CLOCKS_PER_SEC;
 
+        // TODO - print
+ 
         // Prevent memory leak :-)
         free(vector);
         free(matrix);
