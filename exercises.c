@@ -21,22 +21,19 @@ void exercise_2() {
 
     clock_t start = clock();
     while (n < 100) {
-        printf("n: %d\n", n);
-        printf("C: %f\n", C);
-        printf("I: %f\n", I);
-        printf("\n");
         C = (2 * C * I) / (C + I);
         I = sqrt(C * I);
         n *= 2;
     }
-    // One final print for last values
+    clock_t end = clock();
+    double time = ((double)(end - start)) / CLOCKS_PER_SEC;
+
+    // Print approximate values
     printf("n: %d\n", n);
     printf("C: %f\n", C);
     printf("I: %f\n", I);
     printf("\n");
 
-    clock_t end = clock();
-    double time = ((double)(end - start)) / CLOCKS_PER_SEC;
     printf("Elapsed %f seconds...\n\n", time);
 }
 
@@ -73,6 +70,7 @@ void exercise_3() {
             free(matrix);
             free(vector);
             free(result);
+            fclose(fp);
             return;
         }
 
@@ -88,6 +86,7 @@ void exercise_3() {
         free(vector);
         free(matrix);
         free(result);
+        fclose(fp);
     }
 }
 
