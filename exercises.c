@@ -82,6 +82,7 @@ void exercise_3() {
         }
 
         // Perform multiplication
+        // TODO
 
         // Prevent memory leak :-)
         free(vector);
