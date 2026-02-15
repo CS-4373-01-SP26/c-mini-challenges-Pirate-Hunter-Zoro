@@ -157,7 +157,7 @@ void exercise_4(){
     }
     end = clock();
     total_operation_time = ((double)(end - start)) / CLOCKS_PER_SEC;
-    printf("Division Time for %d Operations: %f seconds\n\n", ITERATIONS, total_operation_time);
+    printf("Sine Time for %d Operations: %f seconds\n\n", ITERATIONS, total_operation_time);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
