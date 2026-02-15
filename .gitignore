@@ -1,1 +1,3 @@
 bin/
+cachegrind*
+*.txt

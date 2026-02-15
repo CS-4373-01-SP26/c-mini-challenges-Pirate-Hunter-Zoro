@@ -63,10 +63,10 @@ No. Based on the timing results, the operations from fastest to slowest were: mu
 ### 5. For the row-major/column-major exercise
 
 **a. What did you observe about differences in program behavior in static vs dynamic allocation of arrays, and how do you explain it?**
-For small arrays, static allocation was slightly faster due to the speed of stack memory access. However, the static Variable-Length Array (VLA) quickly hit the memory limits of the stack. For larger sizes (e.g., 512x512 and above), the dynamically allocated 1D flat array on the heap proved more stable and faster, as it avoided the overhead of complex stack boundary calculations.
+Static allocation on the stack was slightly faster for large enough arrays because stack pointer arithmetic is highly optimized and localized. However, static Variable-Length Arrays (VLAs) are inherently limited by the small size of the stack and risk segmentation faults at larger sizes. Dynamic allocation on the heap required OS overhead to map the virtual memory to physical RAM (page faulting). Dynamic memory safely supported much larger array dimensions without crashing.
 
 **b. What did you observe about differences in program behavior in row-major vs. column major computations and how do you explain it?**
-C stores 2D arrays in row-major order (contiguous memory). Row-major traversal is theoretically much faster because it utilizes spatial locality; pulling one value loads the adjacent values into the CPU's L1 cache, resulting in fewer cache misses. In my case, column-major appeared faster or comparable at very small array sizes, which was likely an anomaly caused by aggressive hardware prefetching or microsecond clock noise. At larger scales, row-major access is fundamentally more cache-efficient.
+Row-major computations were significantly faster than column-major computations across all larger array sizes. This is fundamentally due to how C handles memory and how modern CPUs utilize caching. C stores 2D arrays in row-major order, meaning consecutive elements in a row are contiguous in physical RAM. When iterating in row-major order, pulling one value loads a full "cache line" of adjacent values into the CPU's ultra-fast L1 cache (spatial locality), resulting in very few cache misses due to ```arr[i][j]``` being next to ```arr[i][j+1]``` in memory. Conversely, column-major traversal jumps across memory addresses by the size of the row on every single iteration, constantly missing the L1 cache and forcing the CPU to repeatedly fetch data from much slower main memory.
 
 ### 6. For the string transform problem
 
@@ -82,17 +82,11 @@ When manipulating strings via pointer arithmetic, hazards include failing to acc
 ssh student@10.30.248.205
 ```
 
-## Note to self on how I should compile
-
-```bash
-gcc -g exercises.c -o bin/program_name
-valgrind --tool=cachegrind ./bin/main
-```
-
 ## C-Mini-Challenges Ouptut
 
 ```bash
-student@CS-4373-SP26-C-DEV-05:~/c-mini-challenges-Pirate-Hunter-Zoro$ ./bin/main 
+student@CS-4373-SP26-C-DEV-05:~/c-mini-challenges-Pirate-Hunter-Zoro$ gcc -g exercises.c -lm -o bin/main
+student@CS-4373-SP26-C-DEV-05:~/c-mini-challenges-Pirate-Hunter-Zoro$ valgrind --tool=cachegrind ./bin/main 2>cache_report.txt
 Enter a name:
 Mikey
 Hello, Mikey!
@@ -103,37 +97,37 @@ n: 128
 C: 3.142224
 I: 3.141277
 
-Elapsed 0.000013 seconds...
+Elapsed 0.000894 seconds...
 
 
 =============================================================
 Resulting Product:
 18817.000000 18431.000000 5967.000000 16686.000000 25429.000000 18817.000000 16835.000000 17175.000000 25000.000000 14060.000000 
-Time Elapsed: 0.000003 seconds
+Time Elapsed: 0.000653 seconds
 
 
 =============================================================
-Division Time for 10000000 Operations: 0.036359 seconds
-Multiplication Time for 10000000 Operations: 0.034551 seconds
-Square Root Time for 10000000 Operations: 0.040453 seconds
-Sine Time for 10000000 Operations: 0.269751 seconds
+Division Time for 10000000 Operations: 0.281879 seconds
+Multiplication Time for 10000000 Operations: 0.239244 seconds
+Square Root Time for 10000000 Operations: 0.590296 seconds
+Sine Time for 10000000 Operations: 4.198955 seconds
 
 
 =============================================================
-Static Array Size 128 by 128 Row Major Time: 0.000055 Seconds
-Static Array Size 128 by 128 Column Major Time: 0.000063 Seconds
-Dynamic Array Size 128 by 128 Row Major Time: 0.000103 Seconds
-Dynamic Array Size 128 by 128 Column Major Time: 0.000050 Seconds
+Static Array Size 128 by 128 Row Major Time: 0.001092 Seconds
+Static Array Size 128 by 128 Column Major Time: 0.001145 Seconds
+Dynamic Array Size 128 by 128 Row Major Time: 0.001055 Seconds
+Dynamic Array Size 128 by 128 Column Major Time: 0.001006 Seconds
 
-Static Array Size 256 by 256 Row Major Time: 0.000209 Seconds
-Static Array Size 256 by 256 Column Major Time: 0.000330 Seconds
-Dynamic Array Size 256 by 256 Row Major Time: 0.000445 Seconds
-Dynamic Array Size 256 by 256 Column Major Time: 0.000207 Seconds
+Static Array Size 256 by 256 Row Major Time: 0.002236 Seconds
+Static Array Size 256 by 256 Column Major Time: 0.003275 Seconds
+Dynamic Array Size 256 by 256 Row Major Time: 0.002388 Seconds
+Dynamic Array Size 256 by 256 Column Major Time: 0.003404 Seconds
 
-Static Array Size 512 by 512 Row Major Time: 0.000852 Seconds
-Static Array Size 512 by 512 Column Major Time: 0.001100 Seconds
-Dynamic Array Size 512 by 512 Row Major Time: 0.001622 Seconds
-Dynamic Array Size 512 by 512 Column Major Time: 0.000822 Seconds
+Static Array Size 512 by 512 Row Major Time: 0.009265 Seconds
+Static Array Size 512 by 512 Column Major Time: 0.015685 Seconds
+Dynamic Array Size 512 by 512 Row Major Time: 0.010129 Seconds
+Dynamic Array Size 512 by 512 Column Major Time: 0.015079 Seconds
 
 
 =============================================================
@@ -142,4 +136,428 @@ terrestrial
 Original String: terrestrial
 
 Reverse String: lairtserret
+
+
+student@CS-4373-SP26-C-DEV-05:~/c-mini-challenges-Pirate-Hunter-Zoro$ cat cache_report.txt 
+==26767== Cachegrind, a high-precision tracing profiler
+==26767== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote et al.
+==26767== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
+==26767== Command: ./bin/main
+==26767== 
+==26767== 
+==26767== I refs:        1,760,351,868
+student@CS-4373-SP26-C-DEV-05:~/c-mini-challenges-Pirate-Hunter-Zoro$ ls
+ bin                    cachegrind.out.26659   cache_report.txt      loopsstaticshell.c   README.pdf
+ cachegrind.out.26649   cachegrind.out.26759   exercises.c           mv.txt              'SoCs VM Notes.pdf'
+ cachegrind.out.26658   cachegrind.out.26767   loopsdynamicshell.c   README.md
+student@CS-4373-SP26-C-DEV-05:~/c-mini-challenges-Pirate-Hunter-Zoro$ cg_annotate cachegrind.out.26767
+--------------------------------------------------------------------------------
+-- Metadata
+--------------------------------------------------------------------------------
+Invocation:       /usr/bin/cg_annotate cachegrind.out.26767
+Command:          ./bin/main
+Events recorded:  Ir
+Events shown:     Ir
+Event sort order: Ir
+Threshold:        0.1%
+Annotation:       on
+
+--------------------------------------------------------------------------------
+-- Summary
+--------------------------------------------------------------------------------
+Ir____________________ 
+
+1,760,351,868 (100.0%)  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+-- File:function summary
+--------------------------------------------------------------------------------
+  Ir___________________________  file:function
+
+< 1,108,930,523 (63.0%,  63.0%)  ./math/../sysdeps/ieee754/dbl-64/s_sin.c:__sin_sse2
+
+<   431,023,854 (24.5%,  87.5%)  /home/student/c-mini-challenges-Pirate-Hunter-Zoro/exercises.c:
+    400,000,104 (22.7%)            exercise_4
+     31,018,107  (1.8%)            exercise_5
+
+<    99,999,997  (5.7%,  93.2%)  ./math/../sysdeps/x86/fpu/fenv_private.h:__sin_sse2
+
+<    50,000,025  (2.8%,  96.0%)  ./math/./math/w_sqrt_compat.c:sqrt
+
+<    40,001,572  (2.3%,  98.3%)  ???:
+     40,001,560  (2.3%)            ???
+
+<    30,000,015  (1.7%, 100.0%)  ./math/../sysdeps/ieee754/dbl-64/e_sqrt.c:__sqrt_finite@GLIBC_2.15
+
+--------------------------------------------------------------------------------
+-- Function:file summary
+--------------------------------------------------------------------------------
+  Ir___________________________  function:file
+
+> 1,208,930,520 (68.7%,  68.7%)  __sin_sse2:
+  1,108,930,523 (63.0%)            ./math/../sysdeps/ieee754/dbl-64/s_sin.c
+     99,999,997  (5.7%)            ./math/../sysdeps/x86/fpu/fenv_private.h
+
+>   400,000,104 (22.7%,  91.4%)  exercise_4:/home/student/c-mini-challenges-Pirate-Hunter-Zoro/exercises.c
+
+>    50,000,025  (2.8%,  94.2%)  sqrt:./math/./math/w_sqrt_compat.c
+
+>    40,001,560  (2.3%,  96.5%)  ???:???
+
+>    31,018,107  (1.8%,  98.3%)  exercise_5:/home/student/c-mini-challenges-Pirate-Hunter-Zoro/exercises.c
+
+>    30,000,015  (1.7%, 100.0%)  __sqrt_finite@GLIBC_2.15:./math/../sysdeps/ieee754/dbl-64/e_sqrt.c
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./math/../sysdeps/ieee754/dbl-64/e_sqrt.c
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./math/../sysdeps/ieee754/dbl-64/e_sqrt.c
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./math/../sysdeps/ieee754/dbl-64/s_sin.c
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./math/../sysdeps/ieee754/dbl-64/s_sin.c
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./math/../sysdeps/x86/fpu/fenv_private.h
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./math/../sysdeps/x86/fpu/fenv_private.h
+
+--------------------------------------------------------------------------------
+-- Annotated source file: ./math/./math/w_sqrt_compat.c
+--------------------------------------------------------------------------------
+Unannotated because one or more of these original files are unreadable:
+- ./math/./math/w_sqrt_compat.c
+
+--------------------------------------------------------------------------------
+-- Annotated source file: /home/student/c-mini-challenges-Pirate-Hunter-Zoro/exercises.c
+--------------------------------------------------------------------------------
+Ir_______________ 
+
+         .         #include <stdio.h>
+         .         #include <math.h>
+         .         #include <time.h>
+         .         #include <stdlib.h>
+         .         
+         .         /////////////////////////////////////////////////////////////////////////////////////////////////////////
+         .         
+         7 (0.0%)  void exercise_1() {
+         .             // Read and print name
+         .             char name[100];
+         3 (0.0%)      printf("Enter a name:\n");
+         .             // NOTE - do not enter in the address &name; name is already an address
+         6 (0.0%)      scanf("%s", name);
+         1 (0.0%)      getchar();
+         .         
+         6 (0.0%)      printf("Hello, %s!\n\n", name);
+         6 (0.0%)  }
+         .         
+         .         /////////////////////////////////////////////////////////////////////////////////////////////////////////
+         .         
+         4 (0.0%)  void exercise_2() {
+         .             // Approximations of pi
+         1 (0.0%)      int n=4;
+         2 (0.0%)      double C=4.0; // Circumscribed semi perimeter
+         2 (0.0%)      double I=2*sqrt(2); // Inscribed semi perimeter
+         .         
+         2 (0.0%)      clock_t start = clock();
+        13 (0.0%)      while (n < 100) {
+        35 (0.0%)          C = (2 * C * I) / (C + I);
+        35 (0.0%)          I = sqrt(C * I);
+         5 (0.0%)          n *= 2;
+         .             }
+         2 (0.0%)      clock_t end = clock();
+         7 (0.0%)      double time = ((double)(end - start)) / CLOCKS_PER_SEC;
+         .         
+         .             // Print approximate values
+         6 (0.0%)      printf("n: %d\n", n);
+         6 (0.0%)      printf("C: %f\n", C);
+         6 (0.0%)      printf("I: %f\n", I);
+         2 (0.0%)      printf("\n");
+         .         
+         6 (0.0%)      printf("Elapsed %f seconds...\n\n", time);
+         3 (0.0%)  }
+         .         
+         .         /////////////////////////////////////////////////////////////////////////////////////////////////////////
+         .         
+         7 (0.0%)  void exercise_3() {
+         6 (0.0%)      FILE* fp = fopen("mv.txt", "r");
+         2 (0.0%)      if (fp == NULL) {
+         .                 printf("ERROR reading file mv.txt...\n");
+         .             } else {
+         .                 int rows;
+         .                 int cols;
+         .                 // First line in file contains rows and columns
+         7 (0.0%)          fscanf(fp, "%d %d", &rows, &cols);
+         .                 // Now we can allocate the matrix
+         8 (0.0%)          double* matrix = malloc(rows * cols * sizeof(double));
+         .                 // Vector length must be the number of columns
+         6 (0.0%)          double* vector = malloc(cols * sizeof(double));
+         .                 // Resulting product will be of length rows
+         6 (0.0%)          double* result = malloc(rows * sizeof(double));
+         .         
+         .                 // Read in the actual matrix
+        45 (0.0%)          for (int i=0; i<rows; i++) {
+       450 (0.0%)              for (int j=0; j<cols; j++) {
+         .                         // Ignore white space
+     1,500 (0.0%)                  fscanf(fp, "%lf", &matrix[i * cols + j]);
+         .                     }
+         .                 }
+         .         
+         .                 // Read in the vector length and ensure it is cols
+         .                 int vector_length;
+         7 (0.0%)          fscanf(fp, "%d", &vector_length);
+         4 (0.0%)          if (vector_length != cols) {
+         .                     printf("ERROR - invalid dimensions given with matrix of %d columns and vector of length %d", cols, vector_length);
+         .                     // Prevent memory leak :-)
+         .                     free(matrix);
+         .                     free(vector);
+         .                     free(result);
+         .                     fclose(fp);
+         .                     return;
+         .                 }
+         .         
+         .                 // Read in the vector
+        45 (0.0%)          for (int i=0; i<vector_length; i++) {
+       110 (0.0%)              fscanf(fp, "%lf", &vector[i]);
+         .                 }
+         .         
+         .                 // Perform multiplication
+         2 (0.0%)          clock_t start = clock();
+        45 (0.0%)          for (int r=0; r<rows; r++) {
+        10 (0.0%)              int dot_prod = 0;
+       450 (0.0%)              for (int c=0; c<cols; c++) {
+     2,200 (0.0%)                  dot_prod += matrix[r*cols + c] * vector[c];
+         .                     }
+        80 (0.0%)              result[r] = dot_prod;
+         .                 }
+         2 (0.0%)          clock_t end = clock();
+         7 (0.0%)          double elapsed_time = ((double)(end - start)) / CLOCKS_PER_SEC;
+         .         
+         .                 // Print resulting vector
+         3 (0.0%)          printf("Resulting Product:\n");
+        45 (0.0%)          for (int i=0; i<rows; i++) {
+       110 (0.0%)              printf("%f ", result[i]);
+         .                 }
+         6 (0.0%)          printf("\nTime Elapsed: %f seconds\n\n", elapsed_time);
+         .          
+         .                 // Prevent memory leak :-)
+         3 (0.0%)          free(vector);
+         3 (0.0%)          free(matrix);
+         3 (0.0%)          free(result);
+         3 (0.0%)          fclose(fp);
+         .             }
+         5 (0.0%)  }
+         .         
+         .         /////////////////////////////////////////////////////////////////////////////////////////////////////////
+         .         
+         4 (0.0%)  void exercise_4(){
+         .             // TODO - implement this function
+         1 (0.0%)      int ITERATIONS = 10000000;
+         .             volatile double result; // Because otherwise the compiler is smart enough to realize we are not using the result and will skip the code
+         .             
+         .             // Time division
+         2 (0.0%)      clock_t start = clock();
+40,000,005 (2.3%)      for (int i=0; i<ITERATIONS; i++) {
+50,000,000 (2.8%)          result = i / 1.0001;
+         .             }
+         2 (0.0%)      clock_t end = clock();
+         7 (0.0%)      double total_operation_time = ((double)(end - start)) / CLOCKS_PER_SEC;
+         8 (0.0%)      printf("Division Time for %d Operations: %f seconds\n", ITERATIONS, total_operation_time);
+         .         
+         .             // Time multiplication
+         2 (0.0%)      start = clock();
+40,000,005 (2.3%)      for (int i = 0; i < ITERATIONS; i++)
+         .             {
+50,000,000 (2.8%)          result = i * 1.0001;
+         .             }
+         2 (0.0%)      end = clock();
+         7 (0.0%)      total_operation_time = ((double)(end - start)) / CLOCKS_PER_SEC;
+         8 (0.0%)      printf("Multiplication Time for %d Operations: %f seconds\n", ITERATIONS, total_operation_time);
+         .         
+         .             // Time square root
+         2 (0.0%)      start = clock();
+40,000,005 (2.3%)      for (int i = 0; i < ITERATIONS; i++)
+         .             {
+70,000,000 (4.0%)          result = sqrt(i);
+         .             }
+         2 (0.0%)      end = clock();
+         7 (0.0%)      total_operation_time = ((double)(end - start)) / CLOCKS_PER_SEC;
+         8 (0.0%)      printf("Square Root Time for %d Operations: %f seconds\n", ITERATIONS, total_operation_time);
+         .         
+         .             // Time sine
+         2 (0.0%)      start = clock();
+40,000,005 (2.3%)      for (int i = 0; i < ITERATIONS; i++)
+         .             {
+70,000,000 (4.0%)          result = sin(i);
+         .             }
+         2 (0.0%)      end = clock();
+         7 (0.0%)      total_operation_time = ((double)(end - start)) / CLOCKS_PER_SEC;
+         8 (0.0%)      printf("Sine Time for %d Operations: %f seconds\n\n", ITERATIONS, total_operation_time);
+         3 (0.0%)  }
+         .         
+         .         /////////////////////////////////////////////////////////////////////////////////////////////////////////
+         .         
+        10 (0.0%)  void exercise_5() {
+         1 (0.0%)      int N = 128;
+         .             volatile double v;
+         .             clock_t start;
+         .             clock_t end;
+         .             double total_time;
+        15 (0.0%)      while (N < 1024) {
+         .                 // Static array
+     3,561 (0.0%)          double static_array[N][N];
+         .                 // Write to every cell to avoid memory cheating messing with timing
+     3,599 (0.0%)          for (int i = 0; i < N; i++)
+         .                 {
+ 1,380,736 (0.1%)              for (int j = 0; j < N; j++)
+         .                     {
+ 3,784,704 (0.2%)                  static_array[i][j] = 0;
+         .                     }
+         .                 }
+         .         
+         .                 // Static array row major test
+         6 (0.0%)          start = clock();
+     3,599 (0.0%)          for (int i=0; i<N; i++) {
+ 1,380,736 (0.1%)              for (int j=0; j<N; j++) {
+ 3,784,704 (0.2%)                  v = static_array[i][j];
+         .                     }
+         .                 }
+         6 (0.0%)          end = clock();
+        21 (0.0%)          total_time = ((double)(end - start)) / CLOCKS_PER_SEC;
+        27 (0.0%)          printf("Static Array Size %d by %d Row Major Time: %f Seconds\n", N, N, total_time);
+         .         
+         .                 // Static array column major test
+         6 (0.0%)          start = clock();
+     3,599 (0.0%)          for (int i = 0; i < N; i++)
+         .                 {
+ 1,380,736 (0.1%)              for (int j = 0; j < N; j++)
+         .                     {
+ 3,784,704 (0.2%)                  v = static_array[j][i];
+         .                     }
+         .                 }
+         6 (0.0%)          end = clock();
+        21 (0.0%)          total_time = ((double)(end - start)) / CLOCKS_PER_SEC;
+        27 (0.0%)          printf("Static Array Size %d by %d Column Major Time: %f Seconds\n", N, N, total_time);
+         .         
+         .                 // Dynamic Array
+        21 (0.0%)          double* dynamic_array = malloc(N*N*sizeof(double));
+         .                 // Write to every cell to avoid memory cheating messing with timing
+     3,599 (0.0%)          for (int i=0; i < N; i++) {
+ 1,380,736 (0.1%)              for (int j=0; j < N; j++) {
+ 3,784,704 (0.2%)                  dynamic_array[N*i+j] = 0;
+         .                     }
+         .                 }
+         .         
+         .                 // Dynamic array row major test
+         6 (0.0%)          start = clock();
+     3,599 (0.0%)          for (int i = 0; i < N; i++)
+         .                 {
+ 1,380,736 (0.1%)              for (int j = 0; j < N; j++)
+         .                     {
+ 3,784,704 (0.2%)                  v = dynamic_array[i*N+j];
+         .                     }
+         .                 }
+         6 (0.0%)          end = clock();
+        21 (0.0%)          total_time = ((double)(end - start)) / CLOCKS_PER_SEC;
+        27 (0.0%)          printf("Dynamic Array Size %d by %d Row Major Time: %f Seconds\n", N, N, total_time);
+         .         
+         .                 // Dynamic array column major test
+         6 (0.0%)          start = clock();
+     3,599 (0.0%)          for (int i = 0; i < N; i++)
+         .                 {
+ 1,380,736 (0.1%)              for (int j = 0; j < N; j++)
+         .                     {
+ 3,784,704 (0.2%)                  v = dynamic_array[j * N + i];
+         .                     }
+         .                 }
+         6 (0.0%)          end = clock();
+        21 (0.0%)          total_time = ((double)(end - start)) / CLOCKS_PER_SEC;
+        27 (0.0%)          printf("Dynamic Array Size %d by %d Column Major Time: %f Seconds\n\n", N, N, total_time);
+         .         
+         9 (0.0%)          free(dynamic_array);
+         6 (0.0%)          N *= 2;
+         .             }
+        10 (0.0%)  }
+         .         
+         .         /////////////////////////////////////////////////////////////////////////////////////////////////////////
+         .         
+         .         // Helper function for exercise 6
+         4 (0.0%)  void helper_exercise_6(char* c) {
+         .             // Find the end of the string
+         2 (0.0%)      char* start = c;
+         2 (0.0%)      char* end = start;
+        97 (0.0%)      while (*end != '\0' && *end != '\n') {
+        11 (0.0%)          end++; // Pointer arithmetic
+         .             }
+         .             // Go back one from the terminating character if the input was not empty
+         3 (0.0%)      if (end > start) {
+         1 (0.0%)          end--;
+         .             }
+         .             // Now we reverse the string
+        19 (0.0%)      while (start < end) {
+        15 (0.0%)          char temp = *start;
+        20 (0.0%)          *start = *end;
+        15 (0.0%)          *end = temp;
+         5 (0.0%)          start++;
+         5 (0.0%)          end--;
+         .             }
+         4 (0.0%)  }
+         .         
+         .         // Transformer "Wrapper" Function
+         6 (0.0%)  void wrapper_exercise_6(char* s, void (*reverser_function_pointer)(char*)) {
+         .             // Print original string
+         6 (0.0%)      printf("Original String: %s\n", s);
+         4 (0.0%)      reverser_function_pointer(s);
+         6 (0.0%)      printf("Reverse String: %s\n\n", s);
+         3 (0.0%)  }
+         .         
+         4 (0.0%)  void exercise_6() {
+         1 (0.0%)      int max_length = 100;
+         5 (0.0%)      char* s = malloc(sizeof(char)*max_length);
+         3 (0.0%)      printf("Enter a string to be reversed:\n");
+         8 (0.0%)      if (fgets(s, max_length, stdin) != NULL)
+         .             {
+         6 (0.0%)          wrapper_exercise_6(s, helper_exercise_6);
+         .             }
+         .             else
+         .             {
+         .                 printf("Error reading input or EOF reached.\n");
+         .             }
+         .         
+         3 (0.0%)      free(s);
+         3 (0.0%)  }
+         .         
+         .         /////////////////////////////////////////////////////////////////////////////////////////////////////////
+         .         
+         6 (0.0%)  int main(int argc, char **argv) {
+         2 (0.0%)      exercise_1();
+         3 (0.0%)      printf("\n=============================================================\n");
+         2 (0.0%)      exercise_2();
+         3 (0.0%)      printf("\n=============================================================\n");
+         2 (0.0%)      exercise_3();
+         3 (0.0%)      printf("\n=============================================================\n");
+         2 (0.0%)      exercise_4();
+         3 (0.0%)      printf("\n=============================================================\n");
+         2 (0.0%)      exercise_5();
+         3 (0.0%)      printf("\n=============================================================\n");
+         2 (0.0%)      exercise_6();
+         .         
+         1 (0.0%)      return 0;
+         2 (0.0%)  
+
+--------------------------------------------------------------------------------
+-- Annotation summary
+--------------------------------------------------------------------------------
+Ir___________________ 
+
+  431,023,854 (24.5%)    annotated: files known & above threshold & readable, line numbers known
+            0            annotated: files known & above threshold & readable, line numbers unknown
+            0          unannotated: files known & above threshold & two or more non-identical
+1,288,930,560 (73.2%)  unannotated: files known & above threshold & unreadable 
+      395,882  (0.0%)  unannotated: files known & below threshold
+   40,001,572  (2.3%)  unannotated: files unknown
 ```
