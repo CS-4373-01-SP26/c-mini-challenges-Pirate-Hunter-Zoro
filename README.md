@@ -20,62 +20,6 @@ And now, on to the Mini-Challenges:
 
 6. Write a program that accepts a string input from stdio and sends it to a function that transforms it according a transposition function passed in to it as an argument.  The function will print out the string, transform it, and then print out the result. The transposition function, you can assume, simply shuffles the existing characters in the string.  Build a transposition function that reverses the string and apply it.  Where appropriate and possible, use dynamic allocation and pointer arithmetic to get the job done.
 
-## C-Mini-Challenges Ouptut
-
-```bash
-(base) mikeyferguson@MacBook-Air-91 c-mini-challenges-Pirate-Hunter-Zoro % gcc exercises.c -lm -o bin/main
-(base) mikeyferguson@MacBook-Air-91 c-mini-challenges-Pirate-Hunter-Zoro % ./bin/main                     
-Enter a name:
-Mikey 
-Hello, Mikey!
-
-
-=============================================================
-n: 128
-C: 3.142224
-I: 3.141277
-
-Elapsed 0.000005 seconds...
-
-
-=============================================================
-Resulting Product:
-18817.000000 18431.000000 5967.000000 16686.000000 25429.000000 18817.000000 16835.000000 17175.000000 25000.000000 14060.000000 
-Time Elapsed: 0.000004 seconds
-
-
-=============================================================
-Division Time for 10000000 Operations: 0.019092 seconds
-Multiplication Time for 10000000 Operations: 0.011947 seconds
-Square Root Time for 10000000 Operations: 0.007973 seconds
-Sine Time for 10000000 Operations: 0.047004 seconds
-
-
-=============================================================
-Static Array Size 128 by 128 Row Major Time: 0.000030 Seconds
-Static Array Size 128 by 128 Column Major Time: 0.000012 Seconds
-Dynamic Array Size 128 by 128 Row Major Time: 0.000030 Seconds
-Dynamic Array Size 128 by 128 Column Major Time: 0.000014 Seconds
-
-Static Array Size 256 by 256 Row Major Time: 0.000105 Seconds
-Static Array Size 256 by 256 Column Major Time: 0.000067 Seconds
-Dynamic Array Size 256 by 256 Row Major Time: 0.000092 Seconds
-Dynamic Array Size 256 by 256 Column Major Time: 0.000062 Seconds
-
-Static Array Size 512 by 512 Row Major Time: 0.000354 Seconds
-Static Array Size 512 by 512 Column Major Time: 0.000242 Seconds
-Dynamic Array Size 512 by 512 Row Major Time: 0.000360 Seconds
-Dynamic Array Size 512 by 512 Column Major Time: 0.000247 Seconds
-
-
-=============================================================
-Enter a string to be reversed:
-terrestrial
-Original String: terrestrial
-
-Reverse String: lairtserret
-```
-
 ## C-Mini-Challenges Responses
 
 ### 1. For the Hello Name challenge
@@ -114,7 +58,7 @@ I used `clock_t` and `clock()` again, ensuring that the timer only wrapped the m
 Because modern CPUs execute single arithmetic instructions too quickly to measure accurately, I placed the operation inside a loop running 10,000,000 times and timed the entire loop. I assigned the result to a `volatile double` variable which was necessary to prevent the compiler from optimizing and skipping the loop entirely, since the result is never printed or used.
 
 **b. Are all arithmetic operations created equal?**
-No. Based on the timing results, the operations from fastest to slowest were: square root, multiplication, division, and sine. Square root operations are heavily optimized at the hardware instruction level, making them unexpectedly fast compared to standard software assumptions.
+No. Based on the timing results, the operations from fastest to slowest were: multiplication, division, square root, and sine.
 
 ### 5. For the row-major/column-major exercise
 
@@ -132,8 +76,70 @@ An alternative implementation could involve utilizing custom data structures, su
 **b. What programming hazards/pitfalls should be considered in your general approach?**
 When manipulating strings via pointer arithmetic, hazards include failing to account for the null terminator (`\0`), accidentally swapping the newline character (`\n`) to the front of the string, or decrementing a pointer past the starting address of the array if the user inputs an empty string.
 
+## Note to self on ssh into VM
+
+```bash
+ssh student@10.30.248.205
+```
+
 ## Note to self on how I should compile
 
 ```bash
-gcc exercises.c -o bin/program_name
+gcc -g exercises.c -o bin/program_name
+valgrind --tool=cachegrind ./bin/main
+```
+
+## C-Mini-Challenges Ouptut
+
+```bash
+student@CS-4373-SP26-C-DEV-05:~/c-mini-challenges-Pirate-Hunter-Zoro$ ./bin/main 
+Enter a name:
+Mikey
+Hello, Mikey!
+
+
+=============================================================
+n: 128
+C: 3.142224
+I: 3.141277
+
+Elapsed 0.000013 seconds...
+
+
+=============================================================
+Resulting Product:
+18817.000000 18431.000000 5967.000000 16686.000000 25429.000000 18817.000000 16835.000000 17175.000000 25000.000000 14060.000000 
+Time Elapsed: 0.000003 seconds
+
+
+=============================================================
+Division Time for 10000000 Operations: 0.036359 seconds
+Multiplication Time for 10000000 Operations: 0.034551 seconds
+Square Root Time for 10000000 Operations: 0.040453 seconds
+Sine Time for 10000000 Operations: 0.269751 seconds
+
+
+=============================================================
+Static Array Size 128 by 128 Row Major Time: 0.000055 Seconds
+Static Array Size 128 by 128 Column Major Time: 0.000063 Seconds
+Dynamic Array Size 128 by 128 Row Major Time: 0.000103 Seconds
+Dynamic Array Size 128 by 128 Column Major Time: 0.000050 Seconds
+
+Static Array Size 256 by 256 Row Major Time: 0.000209 Seconds
+Static Array Size 256 by 256 Column Major Time: 0.000330 Seconds
+Dynamic Array Size 256 by 256 Row Major Time: 0.000445 Seconds
+Dynamic Array Size 256 by 256 Column Major Time: 0.000207 Seconds
+
+Static Array Size 512 by 512 Row Major Time: 0.000852 Seconds
+Static Array Size 512 by 512 Column Major Time: 0.001100 Seconds
+Dynamic Array Size 512 by 512 Row Major Time: 0.001622 Seconds
+Dynamic Array Size 512 by 512 Column Major Time: 0.000822 Seconds
+
+
+=============================================================
+Enter a string to be reversed:
+terrestrial
+Original String: terrestrial
+
+Reverse String: lairtserret
 ```

@@ -171,6 +171,14 @@ void exercise_5() {
     while (N < 1024) {
         // Static array
         double static_array[N][N];
+        // Write to every cell to avoid memory cheating messing with timing
+        for (int i = 0; i < N; i++)
+        {
+            for (int j = 0; j < N; j++)
+            {
+                static_array[i][j] = 0;
+            }
+        }
 
         // Static array row major test
         start = clock();
@@ -198,6 +206,12 @@ void exercise_5() {
 
         // Dynamic Array
         double* dynamic_array = malloc(N*N*sizeof(double));
+        // Write to every cell to avoid memory cheating messing with timing
+        for (int i=0; i < N; i++) {
+            for (int j=0; j < N; j++) {
+                dynamic_array[N*i+j] = 0;
+            }
+        }
 
         // Dynamic array row major test
         start = clock();
